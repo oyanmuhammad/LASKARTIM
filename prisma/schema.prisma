@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Report Status Enum
+enum ReportStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+}
+
+// Location Enum
+enum Location {
+  DUSUN_KARANG_BARU_TIMUR
+  DUSUN_TAMPATAN
+  DUSUN_PAOK_DANGKA
+}
+
+// Report Model: Citizen's submitted complaint or aspiration
+model Report {
+  id          String       @id @default(cuid())
+  nik         String       @db.VarChar(16)
+  title       String       @db.VarChar(50)
+  category    String       @db.VarChar(100)
+  location    Location
+  description String       @db.VarChar(500)
+  status      ReportStatus @default(DRAFT)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  nikRecord   NIKRecord    @relation(fields: [nik], references: [nik])
+  
+  @@index([nik, createdAt], name: "idx_report_nik_created")
+  @@index([createdAt], name: "idx_report_created")
+  @@index([status], name: "idx_report_status")
+}
+
+// NIKRecord Model: Valid National Identity Numbers for validation
+model NIKRecord {
+  nik       String   @id @db.VarChar(16)
+  name      String   @db.VarChar(100)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  reports   Report[]
+  
+  @@index([isActive], name: "idx_nik_active")
+}
+
+// RateLimitRecord Model: Track NIK validation attempts per IP
+model RateLimitRecord {
+  ip           String    @id
+  attempts     Int       @default(0)
+  blockedUntil DateTime?
+  lastAttempt  DateTime  @default(now())
+  
+  @@index([blockedUntil], name: "idx_ratelimit_blocked")
+}
+
+// User Model: Administrator account for dashboard access
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String?
+  name          String?
+  image         String?
+  emailVerified Boolean      @default(false)
+  role          String       @default("ADMIN")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  accounts      Account[]
+  sessions      Session[]
+  
+  @@index([email], name: "idx_user_email")
+}
+
+// Better Auth: Account Model (OAuth provider accounts)
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refreshToken             String?
+  accessToken              String?
+  expiresAt                Int?
+  tokenType                String?
+  scope                    String?
+  idToken                  String?
+  sessionState             String?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([provider, providerAccountId])
+  @@index([userId], name: "idx_account_user")
+}
+
+// Better Auth: Session Model (User sessions)
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId], name: "idx_session_user")
+  @@index([expiresAt], name: "idx_session_expires")
+}
+
+// Better Auth: Verification Model (Email/phone verification tokens)
+model Verification {
+  id      String   @id @default(cuid())
+  token   String   @unique
+  email   String
+  type    String
+  expires DateTime
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([token], name: "idx_verification_token")
+  @@index([email], name: "idx_verification_email")
+}
+
