@@ -33,7 +33,11 @@ export function CollaborationSection() {
             className="border-primary text-primary hover:bg-primary hover:text-white dark:hover:text-primary"
             asChild
           >
-            <a href="https://xxx.com" target="_blank" rel="noopener noreferrer">
+            <a
+              href="https://karangbarutimur.com"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Website Utama
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
