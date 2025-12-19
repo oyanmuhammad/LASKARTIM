@@ -3,9 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 // Report Status Enum
@@ -34,7 +32,7 @@ model Report {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   nikRecord   NIKRecord    @relation(fields: [nik], references: [nik])
-  
+
   @@index([nik, createdAt], name: "idx_report_nik_created")
   @@index([createdAt], name: "idx_report_created")
   @@index([status], name: "idx_report_status")
@@ -47,9 +45,9 @@ model NIKRecord {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  reports   Report[]
-  
+
+  reports Report[]
+
   @@index([isActive], name: "idx_nik_active")
 }
 
@@ -59,47 +57,47 @@ model RateLimitRecord {
   attempts     Int       @default(0)
   blockedUntil DateTime?
   lastAttempt  DateTime  @default(now())
-  
+
   @@index([blockedUntil], name: "idx_ratelimit_blocked")
 }
 
 // User Model: Administrator account for dashboard access
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
+  id            String   @id @default(cuid())
+  email         String   @unique
   password      String?
   name          String?
   image         String?
-  emailVerified Boolean      @default(false)
-  role          String       @default("ADMIN")
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  
-  accounts      Account[]
-  sessions      Session[]
-  
+  emailVerified Boolean  @default(false)
+  role          String   @default("ADMIN")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
   @@index([email], name: "idx_user_email")
 }
 
 // Better Auth: Account Model (OAuth provider accounts)
 model Account {
-  id                       String  @id @default(cuid())
-  userId                   String
-  type                     String
-  provider                 String
-  providerAccountId        String
-  refreshToken             String?
-  accessToken              String?
-  expiresAt                Int?
-  tokenType                String?
-  scope                    String?
-  idToken                  String?
-  sessionState             String?
-  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refreshToken      String?
+  accessToken       String?
+  expiresAt         Int?
+  tokenType         String?
+  scope             String?
+  idToken           String?
+  sessionState      String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@unique([provider, providerAccountId])
   @@index([userId], name: "idx_account_user")
 }
@@ -113,10 +111,10 @@ model Session {
   ipAddress String?
   userAgent String?
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId], name: "idx_session_user")
   @@index([expiresAt], name: "idx_session_expires")
 }
@@ -128,11 +126,10 @@ model Verification {
   email   String
   type    String
   expires DateTime
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([token], name: "idx_verification_token")
   @@index([email], name: "idx_verification_email")
 }
-
